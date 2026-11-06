@@ -1,0 +1,21 @@
+# Google OAuth
+credentials.json
+token.json
+
+
+# I don't have any of these yet, copilot recommended I have them, though I don't know if they are necessary
+# Secrets
+.env
+
+# Python
+__pycache__/
+*.pyc
+venv/
+.venv/
+
+# VS Code
+.vscode/
+
+# OS files
+.DS_Store
+Thumbs.db
