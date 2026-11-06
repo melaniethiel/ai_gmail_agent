@@ -27,11 +27,22 @@ The goal is not just to build one script, but to show steady growth in practical
 - the project is now structured for safe public sharing and clearer documentation
 
 
-## Planned future versions
+## v0.2 - Read recent messages and display previews
 
-### v0.2 - Read recent messages
-- fetch recent inbox messages
-- format message summaries for display
+### Added
+- retrieve up to 5 recent messages from the inbox
+- request sender, date, and subject metadata from Gmail
+- display each message with its headers and preview snippet
+- add timestamped logs for authentication, API requests, and message processing
+- save logs to a daily rotating file and retain up to five daily log files
+- retain the existing Gmail label listing
+
+### Purpose
+- expand the Gmail API integration from labels to recent inbox messages
+- present useful message information in a readable format
+- make it easier to locate failures with logging
+
+## Planned future versions
 
 ### v0.3 - Filter emails by sender or date
 - add email search and filtering logic

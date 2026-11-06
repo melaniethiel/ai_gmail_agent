@@ -29,6 +29,9 @@ This version establishes the foundation:
 - Google OAuth login
 - Gmail API connection
 - reading the user's Gmail labels
+- retrieving up to 5 recent inbox messages with sender, date, subject, and preview
+- timestamped console and file logs for authentication, API requests, and message-processing steps
+- daily log rotation, retaining up to five daily log files in `logs/`
 - secure local credential handling via `token.json`
 
 ## Tech stack
@@ -58,11 +61,12 @@ This version establishes the foundation:
 3. After approval, Google returns credentials.
 4. The script uses the Gmail API to access the user's account.
 5. It lists the available Gmail labels as a proof of successful authentication.
+6. It retrieves up to 5 recent inbox messages and displays their headers and preview snippets.
+7. It logs progress and API errors with timestamps to the terminal and `logs/ai_gmail_agent.log`, without logging message contents.
 
 ## Roadmap
 
 Planned milestones for future versions include:
-- reading recent inbox messages and displaying message summaries
 - filtering emails by sender, date, and label
 - extracting metadata such as sender, subject, and thread information
 - prioritizing important messages based on urgency or sender
@@ -97,6 +101,9 @@ pip install -r requirements.txt
 ```bash
 python quickstart.py
 ```
+6. This will print message details in the terminal
+7. Timestamped logs are also saved in the `logs/` folder and rotated daily.
+
 
 ## Important security note
 

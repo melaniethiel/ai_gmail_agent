@@ -1,6 +1,7 @@
 # Google OAuth
 credentials.json
 token.json
+logs/
 
 
 # I don't have any of these yet, copilot recommended I have them, though I don't know if they are necessary
