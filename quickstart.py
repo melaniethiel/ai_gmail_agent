@@ -1,5 +1,6 @@
 import os.path
 import logging
+import argparse
 from logging.handlers import TimedRotatingFileHandler
 
 # import all python libraries that are needed for this file
@@ -37,13 +38,54 @@ logging.basicConfig(
 SCOPES = ["https://www.googleapis.com/auth/gmail.readonly"]
 
 
+def parse_positive_integer (value):
+  """Parse a positive integer for command-line queries."""
+  try:
+    number = int(value)
+  except ValueError as error:
+    raise argparse.ArgumentTypeError("must be a whole number") from error
+
+  if number < 1:
+    raise argparse.ArgumentTypeError("must be greater than zero")
+  return number
+
+
+def parse_cli_arguments (arguments=None):
+  """Parse search and result-count options from the command line."""
+  parser = argparse.ArgumentParser(
+      description="Search and triage recent Gmail inbox messages."
+  )
+  parser.add_argument(
+      "--query",
+      default="",
+      help="Gmail search query, such as 'from:person@example.com is:unread'",
+  )
+  parser.add_argument(
+      "--max-results",
+      type=parse_positive_integer,
+      default=5,
+      help="maximum number of inbox messages to display (default: 5)",
+  )
+  return parser.parse_args(arguments)
+
+
 # function to fetch 5 recent inbox messages with their display metadata
-def get_recent_messages(service, max_results=5):
+def get_recent_messages(service, max_results=5, query=""):
   """Fetch recent inbox messages with their display metadata."""
-  logging.info("Requesting up to %d recent inbox messages", max_results)
-  results = service.users().messages().list(
-      userId="me", labelIds=["INBOX"], maxResults=max_results
-  ).execute()
+  logging.info(
+      "Requesting up to %d recent inbox messages; search filter applied: %s",
+      max_results,
+      bool(query),
+  )
+  list_arguments = {
+      "userId": "me",
+      "labelIds": ["INBOX"],
+      "maxResults": max_results,
+  }
+  if query:
+    list_arguments["q"] = query
+  results = service.users().messages().list(**list_arguments).execute()
+  logging.info("Gmail API access confirmed by successful inbox search")
 
   # get the list of message references from the API response
   message_refs = results.get("messages", [])
@@ -67,9 +109,50 @@ def get_recent_messages(service, max_results=5):
   # return the list of messages with their display metadata
   return messages
 
-# function to format a Gmail message's headers and preview for display
+
+def get_triage_flags(message):
+  """Return useful triage signals from Gmail's existing message labels."""
+  # fetch the labels of the message using the Gmail API
+  message_labels = set(message.get("labelIds", []))
+  triage_flags = []
+
+  #check for and add each flag to the list of triage flags if it is present in the message labels
+  if "IMPORTANT" in message_labels:
+    triage_flags.append("Important")
+  if "STARRED" in message_labels:
+    triage_flags.append("Starred")
+  if "UNREAD" in message_labels:
+    triage_flags.append("Unread")
+
+  # return the list of triage flags, or a default message if none are found
+  return triage_flags or ["No special flags"]
+
+
+def get_category(message):
+  """Return a readable category from Gmail's built-in category labels."""
+  # fetch the labels of the message using the Gmail API
+  message_labels = set(message.get("labelIds", []))
+
+  # define a mapping of Gmail category label IDs to human-readable category names
+  category_labels = {
+      "CATEGORY_PERSONAL": "Personal",
+      "CATEGORY_SOCIAL": "Social",
+      "CATEGORY_PROMOTIONS": "Promotions",
+      "CATEGORY_UPDATES": "Updates",
+      "CATEGORY_FORUMS": "Forums",
+  }
+
+  # loops through labeles for category_* labels and displays first one found, or returns "No category" if none are found
+  for label_id, category_name in category_labels.items():
+    if label_id in message_labels:
+      return category_name
+
+  return "No category"
+
+# function to format a Gmail message's details for display
+# Currently shows: headers, preview, category, and select triage flags
 def format_message_summary(message):
-  """Format a Gmail message's headers and preview for display."""
+  """Format a Gmail message's details for display."""
   headers = message.get("payload", {}).get("headers", [])
   header_values = {
       header["name"].lower(): header["value"] for header in headers
@@ -78,15 +161,18 @@ def format_message_summary(message):
   date = header_values.get("date", "Unknown date")
   subject = header_values.get("subject", "(No subject)")
   snippet = message.get("snippet", "").strip() or "(No preview available)"
+  triage = ", ".join(get_triage_flags(message))
+  category = get_category(message)
 
-  return f"From: {sender}\nDate: {date}\nSubject: {subject}\n{snippet}"
+  return (
+      f"From: {sender}\nDate: {date}\nSubject: {subject}\n"
+      f"Category: {category}\nTriage: {triage}\n{snippet}"
+  )
 
-
-# function to list the user's Gmail labels
+# function to authenticate and display recent inbox messages
 def main():
-  """Shows basic usage of the Gmail API.
-  Lists the user's Gmail labels.
-  """
+  """Authenticate with Gmail and display recent inbox messages."""
+  arguments = parse_cli_arguments()
   logging.info("Initialized main function")
   creds = None
   
@@ -118,18 +204,12 @@ def main():
     # Call the Gmail API
     service = build("gmail", "v1", credentials=creds)
     logging.info("Initialized Gmail API client")
-    results = service.users().labels().list(userId="me").execute()
-    labels = results.get("labels", [])
-    logging.info("Gmail API request succeeded; retrieved %d labels", len(labels))
 
-    if not labels:
-      print("No labels found.")
-      return
-    print("Labels:")
-    for label in labels:
-      print(label["name"])
-
-    messages = get_recent_messages(service)
+    messages = get_recent_messages(
+      service,
+      max_results=arguments.max_results,
+      query=arguments.query,
+    )
     if not messages:
       logging.info("No inbox messages were returned")
       print("\nNo messages found in your inbox.")

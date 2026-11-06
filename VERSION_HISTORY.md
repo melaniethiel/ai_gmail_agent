@@ -26,33 +26,48 @@ The goal is not just to build one script, but to show steady growth in practical
 - it demonstrates secure integration with a real external API
 - the project is now structured for safe public sharing and clearer documentation
 
-
-## v0.2 - Read recent messages and display previews
+## v0.2 - Read recent messages, display preview, and added logging
 
 ### Added
-- retrieve up to 5 recent messages from the inbox
-- request sender, date, and subject metadata from Gmail
-- display each message with its headers and preview snippet
-- add timestamped logs for authentication, API requests, and message processing
-- save logs to a daily rotating file and retain up to five daily log files
-- retain the existing Gmail label listing
+- fetch recent inbox messages
+- format message summaries for display
+- add logging for troubleshooting
 
 ### Purpose
-- expand the Gmail API integration from labels to recent inbox messages
-- present useful message information in a readable format
-- make it easier to locate failures with logging
+- expand the Gmail API integration from labels to recent inbox message previews
+- make progress and API failures easier to troubleshoot
+
+### Notes
+- previews use Gmail's snippet; they are not AI-generated summaries
+- logs rotate daily and retain up to four archived files in addition to the current log
+- logs avoid recording email addresses and message contents
+
+## v0.3 - Search and triage inbox messages
+
+### Added
+- accept Gmail search queries from the command line
+- allow the result limit to be configured
+- display important, starred, and unread Gmail labels as triage signals
+- display Gmail's built-in message categories in each summary
+- add offline tests for search-option parsing, triage flags, category mapping, and message-summary formatting
+
+### Removed
+- script to list Gmail labels
+
+### Purpose
+- make it easier to find relevant inbox messages without changing Gmail data
+- surface useful triage information using labels already assigned by Gmail
+- group messages by categories Gmail has assigned, without custom AI rules
+
+### Notes
+- searches remain limited to the inbox and use Gmail's query syntax
+- triage is rule-based and transparent; no LLM is used
+- built-in categories include Personal, Social, Promotions, Updates, and Forums; custom Work and Follow-up categories remain future work
+- this feature reads messages only and does not change labels or email state
 
 ## Planned future versions
 
-### v0.3 - Filter emails by sender or date
-- add email search and filtering logic
-- improve message triage capabilities
-
-### v0.4 - Message categorization
-- sort messages into priority buckets
-- detect important senders or keywords
-
-### v0.5 - AI-assisted summarization
+### v0.4 - AI-assisted summarization
 - use an LLM or AI service to summarize email content
 - make the tool more useful for daily inbox management
 
