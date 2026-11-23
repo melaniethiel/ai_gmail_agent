@@ -65,14 +65,35 @@ The goal is not just to build one script, but to show steady growth in practical
 - built-in categories include Personal, Social, Promotions, Updates, and Forums; custom Work and Follow-up categories remain future work
 - this feature reads messages only and does not change labels or email state
 
+## v0.4 - AI-assisted summarization
+
+### Added
+- opt-in `--summarize` and `--model` command-line options for generating summaries with a selected local Ollama model
+- fetch full Gmail messages only when summarization is requested; default runs continue using Gmail snippets and metadata
+- extract readable plain-text or HTML email bodies while skipping named attachments
+- prompt the model to explain the email's purpose, important details, explicitly stated deadlines, requested actions, and a recommended next step
+- report Ollama connection and response errors
+- add offline tests for full-body retrieval, body extraction, CLI validation, and Ollama request construction
+- document local Ollama setup and privacy considerations
+
+### Purpose
+- provide a local, opt-in way to understand the purpose and action items in an email without changing Gmail data
+
+### Notes
+- email bodies are sent to the local Ollama service only when `--summarize` is selected; they are not written to application logs
+- model output can be inaccurate; the prompt asks the model not to follow instructions in email content, but this is not a security guarantee
+- Gmail access remains read-only; the application does not modify messages or labels
+
 ## Planned future versions
 
-### v0.4 - AI-assisted summarization
-- use an LLM or AI service to summarize email content
-- make the tool more useful for daily inbox management
+### v0.5 - User-approved agentic actions
+- use email summaries to suggest next steps, such as a follow-up task or reply draft
+- show the proposed action and relevant email context before taking action
+- require explicit user approval before any action that changes Gmail or external data
 
 ### v1.0 - MVP Gmail assistant
 - full workflow for reading, filtering, classifying, and summarizing messages
 - cleaner code structure and reusable modules
-
+- look into better unittest outputs to better understand test results
+- look into checking if ollama running and auto-start and auto-close as part of process
 
